@@ -1,0 +1,26 @@
+{
+    "name": "nodejs-basics",
+    "version": "1.0.0",
+    "description": "RSSchool task File Manager",
+    "engines": {
+      "node": ">=22.14.0"
+    },
+    "type": "module",
+    "scripts": {},
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/ArturKhelshtein/file-manager.git"
+    },
+    "keywords": [
+      "nodejs",
+      "assignments",
+      "ArturKhelshtein"
+    ],
+    "author": "ArturKhelshtein",
+    "license": "ISC",
+    "homepage": "https://github.com/ArturKhelshtein/file-manager#readme",
+    "main": "index.js",
+    "bugs": {
+      "url": "https://github.com/ArturKhelshtein/file-manager/issues"
+    }
+  }
