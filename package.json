@@ -6,7 +6,9 @@
       "node": ">=22.14.0"
     },
     "type": "module",
-    "scripts": {},
+    "scripts": {
+        "start": "node index.js"
+    },
     "repository": {
       "type": "git",
       "url": "git+https://github.com/ArturKhelshtein/file-manager.git"
