@@ -1,31 +1,40 @@
 import * as readline from 'node:readline/promises';
 import { exit, stdin, stdout } from 'node:process';
+import os from 'os';
+import { handleOS } from './src/os.js';
+import { answer } from './src/answer.js';
 
 const userName = getName();
 const welcome = `Welcome to the File Manager, ${userName}`;
-const goodbye = `Thank you for using File Manager, ${userName}, goodbye!`;
+const goodbye = `<Thank you for using File Manager, ${userName}, goodbye!`;
+let currentDir = os.homedir()
 
 const rl = readline.createInterface({
     input: stdin,
     output: stdout,
     prompt: '> '
 });
-
-console.log(welcome);
+answer(welcome);
+answer(currentDir);
 rl.prompt();
 
 rl.on('line', (line) => {
-    rl.prompt();
     const input = line.trim();
 
     if (input === '.exit') {
-        console.log(goodbye);
+        answer(goodbye);
         exit(0);
     }
+
+    if (input.startsWith('os')) {
+        answer(handleOS(input.slice(5)));
+    }
+
+    rl.prompt();
 });
 
 rl.on('SIGINT', () => {
-    console.log(goodbye);
+    answer(goodbye);
     exit(0);
 });
 
