@@ -7,7 +7,9 @@ import { handleHash } from './src/hash.js';
 
 const userName = getName();
 const welcome = `Welcome to the File Manager, ${userName}`;
-const goodbye = `<Thank you for using File Manager, ${userName}, goodbye!`;
+const goodbye = `Thank you for using File Manager, ${userName}, goodbye!`;
+const invalidInput = 'Invalid input';
+const operationFailed = 'Operation failed'
 let currentDir = os.homedir()
 
 const rl = readline.createInterface({
@@ -29,17 +31,19 @@ rl.on('line', async (line) => {
         }
 
         if (input.startsWith('os')) {
-            answer(handleOS(input.slice(5)));
+            return answer(handleOS(input.slice(5)));
         }
 
-        if (input.startsWith('hash') && input.length > 5) {
+        if (input.startsWith('hash')) {
             const hash = await handleHash(input.slice(5));
             if (hash) {
-                answer(hash);
+                return answer(hash);
+            } else {
+                return answer(invalidInput)
             }
         }
 
-        answer('Operation failed')
+        answer(operationFailed)
     } catch (error) {
         answer(`Error ${error}`);
     } finally {
