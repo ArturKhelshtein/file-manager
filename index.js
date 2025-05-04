@@ -1,16 +1,17 @@
 import * as readline from 'node:readline/promises';
 import { exit, stdin, stdout } from 'node:process';
 import os from 'os';
-import { handleOS } from './src/os.js';
 import { answer } from './src/answer.js';
+import { up, cd, ls } from './src/nwd.js';
+import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
 
 const userName = getName();
 const welcome = `Welcome to the File Manager, ${userName}`;
 const goodbye = `Thank you for using File Manager, ${userName}, goodbye!`;
 const invalidInput = 'Invalid input';
-const operationFailed = 'Operation failed'
-let currentDir = os.homedir()
+const operationFailed = 'Operation failed';
+let currentDir = os.homedir();
 
 const rl = readline.createInterface({
     input: stdin,
@@ -28,6 +29,22 @@ rl.on('line', async (line) => {
         if (input === '.exit') {
             answer(goodbye);
             exit(0);
+        }
+
+        if (input === 'up') {
+            currentDir = up(currentDir);
+            return;
+        }
+
+        if (input === 'ls') {
+            const list = await ls(currentDir);
+            answer(list);
+            return;
+        }
+
+        if (input.startsWith('cd')) {
+            currentDir = await cd(input.slice(3), currentDir);
+            return;
         }
 
         if (input.startsWith('os')) {
