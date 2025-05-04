@@ -32,7 +32,7 @@ const add = async (name, currentDir) => {
     const filePath = resolve(currentDir, normalize(name));
 
     try {
-        await promises.access(filePath); 
+        await promises.access(filePath);
         answer('The file already exist');
         return;
     } catch (error) {
@@ -75,7 +75,37 @@ const rn = async (oldName, name, currentDir) => {
     await promises.rename(filePath, renameFilePath);
 };
 
-const cp = () => { };
+//не реализована
+const cp = async () => {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const srcDir = join(__dirname, 'files');
+    const destDir = join(__dirname, 'files_copy');
+
+    try {
+        await promises.access(srcDir);
+
+        try {
+            await promises.access(destDir);
+            throw new Error('FS operation failed');
+        } catch (error) {
+            if (error.code !== 'ENOENT') {
+                throw new Error('FS operation failed');
+            }
+
+            await promises.mkdir(destDir);
+            const files = await promises.readdir(srcDir);
+
+            for (const file of files) {
+                await promises.copyFile(
+                    join(srcDir, file),
+                    join(destDir, file)
+                );
+            }
+        }
+    } catch (error) {
+        throw new Error('FS operation failed');
+    }
+};
 const mv = () => { };
 
 
