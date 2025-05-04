@@ -1,15 +1,14 @@
-import path from 'path';
 import { fileURLToPath } from 'url';
-import { normalize, isAbsolute } from 'path';
+import { resolve, normalize, join, isAbsolute } from 'path';
 import { promises, createReadStream } from 'fs';
 import { answer } from './answer.js';
 
-const cat = async (fileName, currentDir) => {
-    if (!fileName) {
+const cat = async (name, currentDir) => {
+    if (!name) {
         return;
     }
 
-    const filePath = isAbsolute(fileName) ? path.normalize(fileName) : path.join(currentDir, fileName);
+    const filePath = isAbsolute(name) ? normalize(name) : join(currentDir, name);
 
     await promises.access(filePath);
     const readStream = createReadStream(filePath);
@@ -20,12 +19,29 @@ const cat = async (fileName, currentDir) => {
         readStream.on('end', () => {
             process.stdout.write('\n');
             resolve();
-        } );
+        });
         readStream.on('error', reject);
     });
 };
 
-const add = () => { };
+const add = async (name, currentDir) => {
+    if (!name) {
+        return;
+    }
+
+    const filePath = resolve(currentDir, normalize(name));
+
+    try {
+        await promises.access(filePath); 
+        answer('The file already exist');
+        return;
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            await promises.writeFile(filePath, '');
+        }
+    }
+};
+
 const mkdir = () => { };
 const rn = () => { };
 const cp = () => { };
