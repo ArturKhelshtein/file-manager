@@ -3,6 +3,7 @@ import { exit, stdin, stdout } from 'node:process';
 import os from 'os';
 import { answer } from './src/answer.js';
 import { up, cd, ls } from './src/nwd.js';
+import { cat } from './src/basic.js';
 import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
 
@@ -43,7 +44,13 @@ rl.on('line', async (line) => {
         }
 
         if (input.startsWith('cd')) {
-            currentDir = await cd(input.slice(3), currentDir);
+            const newDir = await cd(input.slice(3), currentDir);
+            currentDir = newDir ? newDir : currentDir;
+            return;
+        }
+
+        if (input.startsWith('cat')) {
+            await cat(input.slice(4), currentDir);
             return;
         }
 
