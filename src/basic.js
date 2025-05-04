@@ -42,7 +42,15 @@ const add = async (name, currentDir) => {
     }
 };
 
-const mkdir = () => { };
+const mkdir = async (name, currentDir) => {
+    if (!name) {
+        return;
+    }
+
+    const newDir = resolve(currentDir, normalize(name));
+    await promises.mkdir(newDir);
+};
+
 const rn = () => { };
 const cp = () => { };
 const mv = () => { };

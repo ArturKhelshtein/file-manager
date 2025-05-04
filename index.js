@@ -3,7 +3,7 @@ import { exit, stdin, stdout } from 'node:process';
 import os from 'os';
 import { answer } from './src/answer.js';
 import { up, cd, ls } from './src/nwd.js';
-import { cat, add } from './src/basic.js';
+import { cat, add, mkdir } from './src/basic.js';
 import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
 
@@ -56,6 +56,11 @@ rl.on('line', async (line) => {
 
         if (input.startsWith('add')) {
             await add(input.slice(4), currentDir);
+            return;
+        }
+
+        if (input.startsWith('mkdir')) {
+            await mkdir(input.slice(6), currentDir);
             return;
         }
 
