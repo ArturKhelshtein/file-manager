@@ -1,7 +1,6 @@
 import { sep, resolve, normalize, isAbsolute } from 'path';
 import { readdir, access, stat } from 'fs/promises';
 import { answer } from './answer.js';
-import { homedir } from 'os';
 
 const up = (inputDir) => {
     if (inputDir.split(sep).length > 1) {
@@ -43,11 +42,32 @@ const cd = async (inputDirRaw, currentDir) => {
 }
 
 const ls = async (inputDir) => {
-    let result = '';
+    let result ='Files and folders in current directory\n'
+    result += '(index) | Name                 | Type \n';
+    result += '--------------------------------------\n';
 
-    const files = await readdir(inputDir);
-    for (const file of files) {
-        result += file + '\n'
+    const data = await readdir(inputDir);
+    const directories = [];
+    const files = [];
+
+    for (const file of data) {
+        const fileDir = resolve(inputDir, file);
+        const stats = await stat(fileDir);
+        if (stats.isDirectory()) {
+            directories.push(file);
+        } else {
+            files.push(file);
+        }
+    }
+
+    for (const [index, dir] of directories.entries()) {
+        const slicedName = dir.length > 20 ? dir.slice(0, 17) + '...' : dir;
+        result += `${index.toString().padEnd(7)} | ${slicedName.padEnd(20)} | directory\n`;
+    }
+
+    for (const [index, file] of files.entries()) {
+        const slicedName = file.length > 20 ? file.slice(0, 17) + '...' : file;
+        result += `${(directories.length + index).toString().padEnd(7)} | ${slicedName.padEnd(20)} | file\n`;
     }
 
     return result;
