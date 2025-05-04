@@ -51,7 +51,30 @@ const mkdir = async (name, currentDir) => {
     await promises.mkdir(newDir);
 };
 
-const rn = () => { };
+const rn = async (oldName, name, currentDir) => {
+    if (!oldName || !name) {
+        return;
+    }
+
+    const filePath = join(currentDir, oldName);
+    const renameFilePath = join(currentDir, name);
+
+    try {
+        await promises.access(renameFilePath);
+        throw new Error('FS operation failed, already exist');
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            if (error.message === 'FS operation failed, unexpected') {
+                throw error;
+            }
+            throw new Error('FS operation failed, unexpected');
+        }
+    }
+
+    await promises.access(filePath);
+    await promises.rename(filePath, renameFilePath);
+};
+
 const cp = () => { };
 const mv = () => { };
 

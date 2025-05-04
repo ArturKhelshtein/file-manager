@@ -3,7 +3,7 @@ import { exit, stdin, stdout } from 'node:process';
 import os from 'os';
 import { answer } from './src/answer.js';
 import { up, cd, ls } from './src/nwd.js';
-import { cat, add, mkdir } from './src/basic.js';
+import { cat, add, mkdir, rn } from './src/basic.js';
 import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
 
@@ -24,52 +24,59 @@ answer(`You are currently in ${currentDir}`);
 rl.prompt();
 
 rl.on('line', async (line) => {
-    const input = line.trim();
+    const [command, ...args] = line.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+    const cleanedArgs = args.map(arg => arg.trim().replace(/^['"]|['"]$/g, ''));
+
 
     try {
-        if (input === '.exit') {
+        if (command === '.exit') {
             answer(goodbye);
             exit(0);
         }
 
-        if (input === 'up') {
+        if (command === 'up') {
             currentDir = up(currentDir);
             return;
         }
 
-        if (input === 'ls') {
+        if (command === 'ls') {
             const list = await ls(currentDir);
             answer(list);
             return;
         }
 
-        if (input.startsWith('cd')) {
-            const newDir = await cd(input.slice(3), currentDir);
+        if (command.startsWith('cd')) {
+            const newDir = await cd(cleanedArgs[0], currentDir);
             currentDir = newDir ? newDir : currentDir;
             return;
         }
 
-        if (input.startsWith('cat')) {
-            await cat(input.slice(4), currentDir);
+        if (command.startsWith('cat')) {
+            await cat(cleanedArgs[0], currentDir);
             return;
         }
 
-        if (input.startsWith('add')) {
-            await add(input.slice(4), currentDir);
+        if (command.startsWith('add')) {
+            await add(cleanedArgs[0], currentDir);
             return;
         }
 
-        if (input.startsWith('mkdir')) {
-            await mkdir(input.slice(6), currentDir);
+        if (command.startsWith('mkdir')) {
+            await mkdir(cleanedArgs[0], currentDir);
             return;
         }
 
-        if (input.startsWith('os')) {
-            return answer(handleOS(input.slice(5)));
+        if (command.startsWith('rn')) {
+            await rn(cleanedArgs[0], cleanedArgs[1], currentDir);
+            return;
         }
 
-        if (input.startsWith('hash')) {
-            const hash = await handleHash(input.slice(5));
+        if (command.startsWith('os')) {
+            return answer(handleOS(cleanedArgs[0]));
+        }
+
+        if (command.startsWith('hash')) {
+            const hash = await handleHash(cleanedArgs[0]);
             if (hash) {
                 return answer(hash);
             } else {
