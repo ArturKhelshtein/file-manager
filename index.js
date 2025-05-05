@@ -3,7 +3,7 @@ import { exit, stdin, stdout } from 'node:process';
 import os from 'os';
 import { answer } from './src/answer.js';
 import { up, cd, ls } from './src/nwd.js';
-import { cat, add, mkdir, rn } from './src/basic.js';
+import { cat, add, mkdir, rn, cp } from './src/basic.js';
 import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
 
@@ -68,6 +68,12 @@ rl.on('line', async (line) => {
 
         if (command.startsWith('rn')) {
             await rn(cleanedArgs[0], cleanedArgs[1], currentDir);
+            return;
+        }
+
+        if (command.startsWith('cp')) {
+            const cc = await cp(cleanedArgs[0], cleanedArgs[1], currentDir);
+            console.log(cc)
             return;
         }
 

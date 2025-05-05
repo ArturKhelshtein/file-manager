@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url';
-import { resolve, normalize, join, isAbsolute } from 'path';
-import { promises, createReadStream } from 'fs';
+import { resolve, normalize, join, isAbsolute, extname, basename } from 'path';
+import { promises, createReadStream, createWriteStream } from 'fs';
 import { answer } from './answer.js';
 
 const cat = async (name, currentDir) => {
@@ -33,7 +33,7 @@ const add = async (name, currentDir) => {
 
     try {
         await promises.access(filePath);
-        answer('The file already exist');
+        answer('Invalid input, the file already exist');
         return;
     } catch (error) {
         if (error.code === 'ENOENT') {
@@ -61,13 +61,10 @@ const rn = async (oldName, name, currentDir) => {
 
     try {
         await promises.access(renameFilePath);
-        throw new Error('FS operation failed, already exist');
+        throw new Error('Invalid input, already exist');
     } catch (error) {
         if (error.code !== 'ENOENT') {
-            if (error.message === 'FS operation failed, unexpected') {
-                throw error;
-            }
-            throw new Error('FS operation failed, unexpected');
+            throw new Error(error);
         }
     }
 
@@ -75,40 +72,60 @@ const rn = async (oldName, name, currentDir) => {
     await promises.rename(filePath, renameFilePath);
 };
 
-//не реализована
-const cp = async () => {
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const srcDir = join(__dirname, 'files');
-    const destDir = join(__dirname, 'files_copy');
+const cp = async (sourceFile, targetDir, currentDir) => {
+    if (!sourceFile || !targetDir) {
+        return;
+    }
+
+    const sourcePath = join(currentDir, sourceFile);
 
     try {
-        await promises.access(srcDir);
+        await promises.access(sourcePath);
+    } catch (error) {
+        throw new Error('Invalid input, source file does not exist');
+    }
 
-        try {
-            await promises.access(destDir);
-            throw new Error('FS operation failed');
-        } catch (error) {
-            if (error.code !== 'ENOENT') {
-                throw new Error('FS operation failed');
-            }
-
-            await promises.mkdir(destDir);
-            const files = await promises.readdir(srcDir);
-
-            for (const file of files) {
-                await promises.copyFile(
-                    join(srcDir, file),
-                    join(destDir, file)
-                );
-            }
+    try {
+        const stats = await promises.stat(targetDir);
+        if (!stats.isDirectory()) {
+            throw new Error('Invalid input, target path is not a directory');
         }
     } catch (error) {
-        throw new Error('FS operation failed');
+        throw new Error('Invalid input, target directory does not exist');
     }
+
+    let targetPath;
+
+    try {
+        await promises.access(normalize(targetDir));
+        const ext = extname(sourceFile);
+        const baseName = basename(sourceFile, ext);
+        let copyIndex = 0;
+
+        do {
+            targetPath = join(targetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`);
+            copyIndex++;
+        } while (await promises.access(targetPath).then(() => true).catch(() => false));
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            throw new Error(error);
+        }
+    }
+
+    const readStream = createReadStream(sourcePath);
+    const writeStream = createWriteStream(targetPath);
+
+    return new Promise((resolve, reject) => {
+        readStream.pipe(writeStream);
+        readStream.on('error', reject);
+        writeStream.on('finish', resolve);
+    });
 };
+
+//не реализована
 const mv = () => { };
 
-
+//не реализована
 const rm = async () => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const filePath = path.join(__dirname, 'files', 'wrongFilename.txt');
