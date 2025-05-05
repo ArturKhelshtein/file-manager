@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'url';
 import { resolve, normalize, join, isAbsolute, extname, basename } from 'path';
 import { promises, createReadStream, createWriteStream } from 'fs';
 import { answer } from './answer.js';
@@ -9,7 +8,7 @@ const cat = async (name, currentDir) => {
         return;
     }
 
-    const filePath = isAbsolute(name) ? normalize(name) : join(currentDir, name);
+    const filePath = isAbsolute(name) ? normalize(name) : join(currentDir, normalize(name));
 
     await promises.access(filePath);
     const readStream = createReadStream(filePath);
@@ -60,8 +59,8 @@ const rn = async (oldName, name, currentDir) => {
         return;
     }
 
-    const filePath = join(currentDir, oldName);
-    const renameFilePath = join(currentDir, name);
+    const filePath = join(currentDir, normalize(oldName));
+    const renameFilePath = join(currentDir, normalize(name));
 
     try {
         await promises.access(renameFilePath);
@@ -82,7 +81,10 @@ const cp = async (sourceFile, targetDir, currentDir) => {
         return;
     }
 
-    const sourcePath = isAbsolute(sourceFile) ? sourceFile : join(currentDir, sourceFile);
+    const normalizeSourceFile = normalize(sourceFile);
+    const normalizeTargetDir = normalize(targetDir);
+
+    const sourcePath = isAbsolute(normalizeSourceFile) ? normalizeSourceFile : join(currentDir, normalizeSourceFile);
 
     try {
         const stats = await promises.stat(sourcePath);
@@ -93,8 +95,10 @@ const cp = async (sourceFile, targetDir, currentDir) => {
         throw new Error('Invalid input, source file does not exist');
     }
 
+    const absoluteTargetDir = isAbsolute(normalizeTargetDir) ? normalizeTargetDir : join(currentDir, normalizeTargetDir);
+
     try {
-        const stats = await promises.stat(normalize(targetDir));
+        const stats = await promises.stat(absoluteTargetDir);
         if (!stats.isDirectory()) {
             throw new Error('Invalid input, target path is not a directory');
         }
@@ -104,23 +108,17 @@ const cp = async (sourceFile, targetDir, currentDir) => {
 
     let targetPath;
 
-    try {
-        await promises.access(normalize(targetDir));
-        const ext = extname(sourceFile);
-        const baseName = basename(sourceFile, ext);
-        let copyIndex = 0;
 
-        do {
-            targetPath = isAbsolute(targetDir)
-                ? join(targetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`)
-                : join(currentDir, targetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`);
-            copyIndex++;
-        } while (await promises.access(targetPath).then(() => true).catch(() => false));
-    } catch (error) {
-        if (error.code !== 'ENOENT') {
-            throw new Error(error);
-        }
-    }
+    await promises.access(normalizeTargetDir);
+    const ext = extname(normalizeSourceFile);
+    const baseName = basename(normalizeSourceFile, ext);
+    let copyIndex = 0;
+
+    do {
+        targetPath = join(absoluteTargetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`);
+        copyIndex++;
+    } while (await promises.access(targetPath).then(() => true).catch(() => false));
+
 
     const readStream = createReadStream(sourcePath);
     const writeStream = createWriteStream(targetPath);
@@ -138,7 +136,10 @@ const mv = async (sourceFile, targetDir, currentDir) => {
         return;
     }
 
-    const sourcePath = isAbsolute(sourceFile) ? sourceFile : join(currentDir, sourceFile);
+    const normalizeSourceFile = normalize(sourceFile);
+    const normalizeTargetDir = normalize(targetDir);
+
+    const sourcePath = isAbsolute(normalizeSourceFile) ? normalizeSourceFile : join(currentDir, normalizeSourceFile);
 
     try {
         const stats = await promises.stat(sourcePath);
@@ -149,8 +150,10 @@ const mv = async (sourceFile, targetDir, currentDir) => {
         throw new Error('Invalid input, source file does not exist');
     }
 
+    const absoluteTargetDir = isAbsolute(normalizeTargetDir) ? normalizeTargetDir : join(currentDir, normalizeTargetDir);
+
     try {
-        const stats = await promises.stat(normalize(targetDir));
+        const stats = await promises.stat(absoluteTargetDir);
         if (!stats.isDirectory()) {
             throw new Error('Invalid input, target path is not a directory');
         }
@@ -158,7 +161,7 @@ const mv = async (sourceFile, targetDir, currentDir) => {
         throw new Error('Invalid input, target directory does not exist');
     }
 
-    const targetPath = isAbsolute(targetDir) ? join(targetDir, sourceFile) : join(currentDir, targetDir, sourceFile);
+    const targetPath = join(absoluteTargetDir, normalizeSourceFile);
 
     if (sourcePath === targetPath) {
         answer('Invalid input');
@@ -178,30 +181,15 @@ const mv = async (sourceFile, targetDir, currentDir) => {
     });
 };
 
-//не реализована
-const rm = async () => {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const filePath = path.join(__dirname, 'files', 'wrongFilename.txt');
-    const renameFilePath = path.join(__dirname, 'files', 'properFilename.md');
-
-    try {
-        await promises.access(renameFilePath);
-        throw new Error('FS operation failed, already exist');
-    } catch (error) {
-        if (error.code !== 'ENOENT') {
-            if (error.message === 'FS operation failed, already exist') {
-                throw error;
-            }
-            throw new Error('FS operation failed, unexpected');
-        }
+const rm = async (name, currentDir) => {
+    if (!name) {
+        answer('Invalid input');
+        return;
     }
 
-    try {
-        await promises.access(filePath);
-        await promises.rename(filePath, renameFilePath);
-    } catch (error) {
-        throw new Error('FS operation failed, source file missed');
-    }
+    const filePath = isAbsolute(name) ? normalize(name) : join(currentDir, name);
+
+    await promises.unlink(filePath);
 };
 
 export { cat, add, mkdir, rn, cp, mv, rm };

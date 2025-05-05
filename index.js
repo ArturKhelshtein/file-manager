@@ -3,7 +3,7 @@ import { exit, stdin, stdout } from 'node:process';
 import os from 'os';
 import { answer } from './src/answer.js';
 import { up, cd, ls } from './src/nwd.js';
-import { cat, add, mkdir, rn, cp, mv } from './src/basic.js';
+import { cat, add, mkdir, rn, cp, mv, rm } from './src/basic.js';
 import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
 
@@ -78,6 +78,11 @@ rl.on('line', async (line) => {
 
         if (command.startsWith('mv')) {
             await mv(cleanedArgs[0], cleanedArgs[1], currentDir);
+            return;
+        }
+
+        if (command.startsWith('rm')) {
+            await rm(cleanedArgs[0], currentDir);
             return;
         }
 
