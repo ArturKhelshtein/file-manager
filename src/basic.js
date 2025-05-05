@@ -5,7 +5,7 @@ import { answer } from './answer.js';
 
 const cat = async (name, currentDir) => {
     if (!name) {
-        return;
+        answer('Invalid input')
     }
 
     const filePath = isAbsolute(name) ? normalize(name) : join(currentDir, name);
@@ -26,7 +26,7 @@ const cat = async (name, currentDir) => {
 
 const add = async (name, currentDir) => {
     if (!name) {
-        return;
+        answer('Invalid input')
     }
 
     const filePath = resolve(currentDir, normalize(name));
@@ -44,7 +44,7 @@ const add = async (name, currentDir) => {
 
 const mkdir = async (name, currentDir) => {
     if (!name) {
-        return;
+        answer('Invalid input')
     }
 
     const newDir = resolve(currentDir, normalize(name));
@@ -74,7 +74,7 @@ const rn = async (oldName, name, currentDir) => {
 
 const cp = async (sourceFile, targetDir, currentDir) => {
     if (!sourceFile || !targetDir) {
-        return;
+        answer('Invalid input')
     }
 
     const sourcePath = join(currentDir, sourceFile);
