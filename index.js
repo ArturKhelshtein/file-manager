@@ -6,6 +6,7 @@ import { up, cd, ls } from './src/nwd.js';
 import { cat, add, mkdir, rn, cp, mv, rm } from './src/basic.js';
 import { handleOS } from './src/os.js';
 import { handleHash } from './src/hash.js';
+import { compress, decompress } from './src/compress.js';
 
 const userName = getName();
 const welcome = `Welcome to the File Manager, ${userName}`;
@@ -98,6 +99,17 @@ rl.on('line', async (line) => {
                 return answer(invalidInput)
             }
         }
+
+        if (command.startsWith('compress')) {
+            compress(cleanedArgs[0], currentDir);
+            return;
+        }
+
+        if (command.startsWith('decompress')) {
+            decompress(cleanedArgs[0], currentDir);
+            return;
+        }
+
 
         answer(operationFailed)
     } catch (error) {
