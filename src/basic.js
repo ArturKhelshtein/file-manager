@@ -5,7 +5,8 @@ import { answer } from './answer.js';
 
 const cat = async (name, currentDir) => {
     if (!name) {
-        answer('Invalid input')
+        answer('Invalid input');
+        return;
     }
 
     const filePath = isAbsolute(name) ? normalize(name) : join(currentDir, name);
@@ -26,7 +27,8 @@ const cat = async (name, currentDir) => {
 
 const add = async (name, currentDir) => {
     if (!name) {
-        answer('Invalid input')
+        answer('Invalid input');
+        return;
     }
 
     const filePath = resolve(currentDir, normalize(name));
@@ -44,7 +46,8 @@ const add = async (name, currentDir) => {
 
 const mkdir = async (name, currentDir) => {
     if (!name) {
-        answer('Invalid input')
+        answer('Invalid input');
+        return;
     }
 
     const newDir = resolve(currentDir, normalize(name));
@@ -53,6 +56,7 @@ const mkdir = async (name, currentDir) => {
 
 const rn = async (oldName, name, currentDir) => {
     if (!oldName || !name) {
+        answer('Invalid input');
         return;
     }
 
@@ -74,19 +78,23 @@ const rn = async (oldName, name, currentDir) => {
 
 const cp = async (sourceFile, targetDir, currentDir) => {
     if (!sourceFile || !targetDir) {
-        answer('Invalid input')
+        answer('Invalid input');
+        return;
     }
 
-    const sourcePath = join(currentDir, sourceFile);
+    const sourcePath = isAbsolute(sourceFile) ? sourceFile : join(currentDir, sourceFile);
 
     try {
-        await promises.access(sourcePath);
+        const stats = await promises.stat(sourcePath);
+        if (!stats.isFile()) {
+            throw new Error('Invalid input, source path is not a file');
+        }
     } catch (error) {
         throw new Error('Invalid input, source file does not exist');
     }
 
     try {
-        const stats = await promises.stat(targetDir);
+        const stats = await promises.stat(normalize(targetDir));
         if (!stats.isDirectory()) {
             throw new Error('Invalid input, target path is not a directory');
         }
@@ -103,7 +111,9 @@ const cp = async (sourceFile, targetDir, currentDir) => {
         let copyIndex = 0;
 
         do {
-            targetPath = join(targetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`);
+            targetPath = isAbsolute(targetDir)
+                ? join(targetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`)
+                : join(currentDir, targetDir, `${baseName} - copy${copyIndex > 0 ? copyIndex : ''}${ext}`);
             copyIndex++;
         } while (await promises.access(targetPath).then(() => true).catch(() => false));
     } catch (error) {
@@ -122,8 +132,51 @@ const cp = async (sourceFile, targetDir, currentDir) => {
     });
 };
 
-//не реализована
-const mv = () => { };
+const mv = async (sourceFile, targetDir, currentDir) => {
+    if (!sourceFile || !targetDir) {
+        answer('Invalid input');
+        return;
+    }
+
+    const sourcePath = isAbsolute(sourceFile) ? sourceFile : join(currentDir, sourceFile);
+
+    try {
+        const stats = await promises.stat(sourcePath);
+        if (!stats.isFile()) {
+            throw new Error('Invalid input, source path is not a file');
+        }
+    } catch (error) {
+        throw new Error('Invalid input, source file does not exist');
+    }
+
+    try {
+        const stats = await promises.stat(normalize(targetDir));
+        if (!stats.isDirectory()) {
+            throw new Error('Invalid input, target path is not a directory');
+        }
+    } catch (error) {
+        throw new Error('Invalid input, target directory does not exist');
+    }
+
+    const targetPath = isAbsolute(targetDir) ? join(targetDir, sourceFile) : join(currentDir, targetDir, sourceFile);
+
+    if (sourcePath === targetPath) {
+        answer('Invalid input');
+        return;
+    }
+
+    const readStream = createReadStream(sourcePath);
+    const writeStream = createWriteStream(targetPath);
+
+    return new Promise((resolve, reject) => {
+        readStream.pipe(writeStream);
+        readStream.on('error', reject);
+        writeStream.on('finish', async () => {
+            await promises.unlink(sourcePath)
+            resolve();
+        });
+    });
+};
 
 //не реализована
 const rm = async () => {
